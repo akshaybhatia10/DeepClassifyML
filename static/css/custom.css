@@ -1,0 +1,45 @@
+footer {
+    position: absolute;
+    width: 100%;
+    bottom: 30;
+}
+
+
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.fixed-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+img { 
+   position: relative; 
+   width: 100%; /* for IE 6 */
+}
+
+.over { 
+   position: absolute; 
+   top: 200px; 
+   left: 0; 
+   width: 100%; 
+}
+
+.over {
+  position: absolute;
+  width: 800px;
+  height: 500px;
+  top: 50%;
+  left: 50%;
+  margin: -200px -100px 100px -100px;
+  color: white;
+
+}
