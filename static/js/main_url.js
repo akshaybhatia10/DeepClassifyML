@@ -12,7 +12,7 @@ function classify_url() {
     img.style.display='block';
     loading.style.display='block';
     img.src=img_url.value;
-    var url="classify_url?imageurl="+img_url.value;
+    var url="classify_url?imageurl=" + img_url.value;
     $.get(url, function(data, status){
       table.style.display='block';
       loading.style.display='none';

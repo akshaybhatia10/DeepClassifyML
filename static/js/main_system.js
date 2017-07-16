@@ -1,25 +1,36 @@
-var img=document.getElementById("img");
-      img.style.display='none';
+window.onload = doStuff;
+
+    function doStuff() {
       var table=document.getElementById("table");
       table.style.display='none';
       var loading=document.getElementById("loading");
       loading.style.display='none';
-      var btn=document.getElementById("btn_search");
-      btn.addEventListener("click", classify_system);
 
-    function readURL(input) {
-      if (input.files && input.files[0]) {
-          var reader = new FileReader();
-          reader.onload = function (e) {
-              var img = document.getElementById("img");
-              img.style.display='block';
-              img.src=e.target.result;
-              var bytes = new Uint2Array(img.src);
-              console.log(bytes.)
+        }
 
-              table.innerHTML="";
+    function previewFile(){
+       var preview = document.querySelector('img'); //selects the query named img
+       var file    = document.querySelector('input[type=file]').files[0]; //same as here
+       var reader  = new FileReader();
+
+               reader.onloadend = function () {
+                   image_url = reader.result 
+                   preview.src = image_url;
+                   console.log(image_url)
+               }
+
+               if (file) {
+                   reader.readAsDataURL(file); //reads the data as a URL
+               } else {
+                   preview.src = "";
+               }
+          }
+
+    function classify_system() {
+              console.log("Clicked")
+              table.innerHTML = "" ;
               loading.style.display='block';
-              var url="classify_system?imageurl=" + bytes;
+              var url="classify_system?imageurl=" + image_url;
               $.get(url, function(data, status){
                 table.style.display='block';
                 loading.style.display='none';
@@ -39,6 +50,4 @@ var img=document.getElementById("img");
 
           };
 
-          reader.readAsDataURL(input.files[0]);
-      }
-  }    
+       previewFile();
