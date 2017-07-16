@@ -1,47 +1,98 @@
 from keras.applications import inception_v3,imagenet_utils
-import cv2, numpy as np
+import cv2 
+import numpy as np
 from flask import Flask, request, make_response,jsonify
 import numpy as np
 import json
 import urllib.request
+from urllib.request import Request, urlopen
+import base64
 import numpy as np
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
-
+import logging
 
 model = None
 app = Flask(__name__,static_url_path='')
 
-def preprocess_img(im,target_size=(299,299)):
-    img=cv2.resize(im,target_size)
-    img=np.divide(img,255.)
-    img=np.subtract(img,0.5)
-    img=np.multiply(img,2.)
+def base64_decode(s):
+    """Add missing padding to string and return the decoded base64 string."""
+    log = logging.getLogger()
+    s = str(s).strip()
+    try:
+        return base64.b64decode(s)
+    except TypeError:
+        padding = len(s) % 4
+        if padding == 1:
+            log.error("Invalid base64 string: {}".format(s))
+            return ''
+        elif padding == 2:
+            s += b'=='
+        elif padding == 3:
+            s += b'='
+        return base64.b64decode(s)
+
+def preprocess_img(img,target_size=(299,299)):
+    if (img.shape[2] == 4):
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)    
+    img = cv2.resize(img,target_size)
+    img = np.divide(img,255.)
+    img = np.subtract(img,0.5)
+    img = np.multiply(img,2.)
     return img
 
 def load_im_from_url(url):
-    requested_url = urllib.request.urlopen(url)
+    #requested_url = urllib.request.urlopen(url)
+    requested_url = urlopen(Request(url,headers={'User-Agent': 'Mozilla/5.0'})) 
     image_array = np.asarray(bytearray(requested_url.read()), dtype=np.uint8)
+    print (image_array.shape)
+    print (image_array)
+    image_array = cv2.imdecode(image_array, -1)
+    print (image_array.shape)
+    return image_array
+
+def load_im_from_system(url):
+    #requested_url = urllib.request.urlopen(url)
+    image_url = url.split(',')[1]
+    #image_array = base64_decode(image_url)
+    if len(image_url) % 4 != 0: #check if multiple of 4
+        while len(image_url) % 4 != 0:
+            image_url = image_url + "="
+        image_array = base64.b64decode(image_url)
+    else:
+        image_array = base64.b64decode(image_url)
+
+    image_array = np.fromstring(image_array, np.uint8)
+    print (image_array)
+    print (image_array.shape)
     print (type(image_array))
-    img = cv2.imdecode(image_array, -1)
-    return img
+    #image_array = image_array.reshape(-1,299,299,3)
+    image_array = cv2.imdecode(image_array, -1)
+
+    print (image_array)
+    print (image_array.shape)
+    print (type(image_array))
+    return image_array    
 
 def predict(img):
+    #print (img.shape)
     img=preprocess_img(img)
+    print (img.shape)
     global model
     if model is None:
         model =inception_v3.InceptionV3()
-        model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+        model.compile(optimizer='adam', loss='categorical_crossentropy')
     preds = model.predict(np.array([img]))
     return imagenet_utils.decode_predictions(preds)
+
+
 
 @app.route('/classify_system', methods=['GET'])
 def classify_system():
     image_url = request.args.get('imageurl')
-    #print (len(image_url))
-    #image_array = np.asarray(bytearray(image_url), dtype=np.uint8)
-    img = cv2.imdecode(np.ndarray(image_url)[:30], -1)
-    resp=predict(img)
-    result=[]
+    image_array = load_im_from_system(image_url)
+    print (image_array)
+    resp = predict(image_array)
+    result = []
     for r in resp[0]:
         result.append({"class_name":r[1],"score":float(r[2])})
     return jsonify({'results':result})
@@ -49,9 +100,9 @@ def classify_system():
 @app.route('/classify_url', methods=['GET'])
 def classify_url():
     image_url = request.args.get('imageurl')
-    img=load_im_from_url(image_url)
-    resp=predict(img)
-    result=[]
+    image_array = load_im_from_url(image_url)
+    resp = predict(image_array)
+    result = []
     for r in resp[0]:
         result.append({"class_name":r[1],"score":float(r[2])})
     return jsonify({'results':result})
