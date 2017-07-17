@@ -43,3 +43,28 @@ img {
   color: white;
 
 }
+
+#top {
+    padding: 2px 2px 5px;
+}
+
+#middle {
+    padding: 2px 2px 5px;
+}
+
+#last {
+    padding: 2px 2px 5px;
+
+}
+
+h2{
+  font-family: 'PT Sans', sans-serif;
+}
+
+h4{
+  font-family: 'PT Sans', sans-serif;
+}
+
+h1{
+  font-family: 'PT Sans', sans-serif;
+}
