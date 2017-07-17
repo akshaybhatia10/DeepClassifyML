@@ -14,22 +14,6 @@ import logging
 model = None
 app = Flask(__name__,static_url_path='')
 
-def base64_decode(s):
-    """Add missing padding to string and return the decoded base64 string."""
-    log = logging.getLogger()
-    s = str(s).strip()
-    try:
-        return base64.b64decode(s)
-    except TypeError:
-        padding = len(s) % 4
-        if padding == 1:
-            log.error("Invalid base64 string: {}".format(s))
-            return ''
-        elif padding == 2:
-            s += b'=='
-        elif padding == 3:
-            s += b'='
-        return base64.b64decode(s)
 
 def preprocess_img(img,target_size=(299,299)):
     if (img.shape[2] == 4):
@@ -41,7 +25,6 @@ def preprocess_img(img,target_size=(299,299)):
     return img
 
 def load_im_from_url(url):
-    #requested_url = urllib.request.urlopen(url)
     requested_url = urlopen(Request(url,headers={'User-Agent': 'Mozilla/5.0'})) 
     image_array = np.asarray(bytearray(requested_url.read()), dtype=np.uint8)
     print (image_array.shape)
@@ -51,30 +34,15 @@ def load_im_from_url(url):
     return image_array
 
 def load_im_from_system(url):
-    #requested_url = urllib.request.urlopen(url)
     image_url = url.split(',')[1]
-    #image_array = base64_decode(image_url)
-    if len(image_url) % 4 != 0: #check if multiple of 4
-        while len(image_url) % 4 != 0:
-            image_url = image_url + "="
-        image_array = base64.b64decode(image_url)
-    else:
-        image_array = base64.b64decode(image_url)
-
+    image_url = image_url.replace(" ", "+")
+    image_array = base64.b64decode(image_url)
+    #image_array = np.asarray(bytearray(image_array), dtype=np.uint8)
     image_array = np.fromstring(image_array, np.uint8)
-    print (image_array)
-    print (image_array.shape)
-    print (type(image_array))
-    #image_array = image_array.reshape(-1,299,299,3)
     image_array = cv2.imdecode(image_array, -1)
-
-    print (image_array)
-    print (image_array.shape)
-    print (type(image_array))
     return image_array    
 
 def predict(img):
-    #print (img.shape)
     img=preprocess_img(img)
     print (img.shape)
     global model
@@ -90,7 +58,6 @@ def predict(img):
 def classify_system():
     image_url = request.args.get('imageurl')
     image_array = load_im_from_system(image_url)
-    print (image_array)
     resp = predict(image_array)
     result = []
     for r in resp[0]:
